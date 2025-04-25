@@ -1,4 +1,6 @@
 # README for `run_hlm.sh`
+Executes the HLM Batch script using the batch sizes defined in the `batch_sizes` array and saves the resulting outputs in the designated `results` directory.
+
 ### Install Requirements
 Before running the script, ensure you have installed the required dependencies. Use the following command to install them from the `requirements.txt` file:
 ```bash
