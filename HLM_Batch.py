@@ -144,7 +144,7 @@ def batch_tokenize(tokenizer, texts, device):
     encoded = tokenizer(texts, return_tensors='pt', padding=True, truncation=True, max_length = max_length)
     return {k: v.to(device) for k, v in encoded.items()}
 
-def predict(bertmodel, gptmodel, classifier, device=device):
+def predict(bertmodel, gptmodel, classifier, device=device, cur_epoch=0):
     bertmodel.eval()
     gptmodel.eval()
     classifier.eval()
@@ -183,7 +183,13 @@ def predict(bertmodel, gptmodel, classifier, device=device):
     correct = sum([p == a for p, a in zip(y_pred, y_act)])
     accuracy = correct / n
     f1 = f1_score(y_act, y_pred, average='weighted')
-
+    # Save validation results
+    with open(f'{result_dir}/validation_results_epoch_{cur_epoch+1}_batch_{batch_size}_lr_{lr:.0e}.txt', 'w') as file:
+        mapper = {0: 'neutral', 1: 'positive', 2: 'negative'}
+        file.write("sentence\tground truth\tpredicted\n")
+        for i in range(len(X_eval)):
+            file.write(f"{X_eval[i]}\t{mapper[y_eval[i]]}\t{mapper[y_pred[i]]}\n")
+            
     print(f'Validation Accuracy: {accuracy:.4f}')
     print(f'Validation F1 Score: {f1:.4f}')
     
@@ -229,7 +235,8 @@ if not os.path.exists(result_dir):
     os.makedirs(result_dir)
     print(f"Created directory: {result_dir}")
 
-test_f1 = []
+test_f1s = []
+val_f1s = []
 
 def train(bertmodel, gptmodel, classifier, device=device, num_epochs=3):
     bertmodel.train()
@@ -311,8 +318,8 @@ def train(bertmodel, gptmodel, classifier, device=device, num_epochs=3):
         print(f"------------\nEPOCH : {epoch+1}/{num_epochs} | Average Loss: {avg_loss:.4f}")
 
         # Evaluate on validation set
-        val_acc, val_f1 = predict(bertmodel, gptmodel, classifier, device)
-        
+        val_acc, val_f1 = predict(bertmodel, gptmodel, classifier, device, epoch)
+        val_f1s.append(f"Epoch {epoch + 1} : Accuracy {val_acc:.4f} : F1 {val_f1:.4f}")
         # Save best model
         if val_f1 > best_f1:
             best_f1 = val_f1
@@ -324,26 +331,32 @@ def train(bertmodel, gptmodel, classifier, device=device, num_epochs=3):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
                 'f1_score': val_f1
-            }, f'{result_dir}/best_model_epoch_{num_epochs}_batch_{batch_size}.pt')
+            }, f'{result_dir}/best_model_epoch_{num_epochs}_batch_{batch_size}_lr_{lr:.0e}.pt')
         
         # Generate predictions for test set
         print("Generating test predictions...")
         y_pred = test(bertmodel, gptmodel, classifier, device)
         
         # Save predictions
-        with open(f'{result_dir}/results_batch_{batch_size}_epoch_{epoch+1}.txt', 'w') as file:
+        with open(f'{result_dir}/results_batch_{batch_size}_epoch_{epoch+1}_lr_{lr:.0e}.txt', 'w') as file:
             mapper = {0: 'neutral', 1: 'positive', 2: 'negative'}
             file.write("sentence\tground truth\tpredicted\n")
             for i in range(len(X_test)):
                 file.write(f"{X_test[i]}\t{mapper[y_test[i]]}\t{mapper[y_pred[i]]}\n")
-        # Append epoch number and F1 score to test_f1 as a string
-        test_f1.append(f"Epoch {epoch + 1} : f1_score {f1_score(y_test, y_pred, average='weighted'):.4f}")
+        # Append epoch number and F1 score to test_f1s as a string
+        test_f1s.append(f"Epoch {epoch + 1} : f1_score {f1_score(y_test, y_pred, average='weighted'):.4f}")
     return bertmodel, gptmodel, classifier
 
 bert, gpt, classifier = train(bertmodel, gptmodel, classifier, device=device, num_epochs=num_epochs)
 
 # Save the test F1 scores to a file
-with open(f'{result_dir}/test_f1_score_{batch_size}_{num_epochs}.txt', 'w') as f:
-    for score in test_f1:
+with open(f'{result_dir}/test_f1s_score_b_{batch_size}_ep_{num_epochs}_lr_{lr:.0e}.txt', 'w') as f:
+    for score in test_f1s:
         f.write(score + '\n')
-print(f"Test F1 scores saved to {result_dir}/test_f1_score_{batch_size}_{num_epochs}.txt")
+print(f"Test F1 scores saved to {result_dir}/test_f1s_score_b_{batch_size}_ep_{num_epochs}_lr_{lr:.0e}.txt")
+
+# Save the validation F1 scores to a file
+with open(f'{result_dir}/val_f1s_score_b_{batch_size}_ep_{num_epochs}_lr_{lr:.0e}.txt', 'w') as f:
+    for score in val_f1s:
+        f.write(score + '\n')
+print(f"Validation F1 scores saved to {result_dir}/val_f1s_score_b_{batch_size}_ep_{num_epochs}_lr_{lr:.0e}.txt")
