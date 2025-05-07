@@ -1,4 +1,4 @@
-# README for `run_hlm.sh`
+# README
 Executes the HLM Batch script using the batch sizes defined in the `batch_sizes` array and saves the resulting outputs in the designated `results` directory.
 
 ### Install Requirements
