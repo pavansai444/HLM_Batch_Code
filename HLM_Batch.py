@@ -229,6 +229,8 @@ if not os.path.exists(result_dir):
     os.makedirs(result_dir)
     print(f"Created directory: {result_dir}")
 
+test_f1 = []
+
 def train(bertmodel, gptmodel, classifier, device=device, num_epochs=3):
     bertmodel.train()
     gptmodel.train()
@@ -322,64 +324,26 @@ def train(bertmodel, gptmodel, classifier, device=device, num_epochs=3):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
                 'f1_score': val_f1
-            }, f'best_model_epoch_{epoch+1}.pt')
+            }, f'{result_dir}/best_model_epoch_{num_epochs}_batch_{batch_size}.pt')
         
         # Generate predictions for test set
         print("Generating test predictions...")
         y_pred = test(bertmodel, gptmodel, classifier, device)
         
         # Save predictions
-        with open(f'results_batch_{batch_size}_epoch_{epoch+1}.txt', 'w') as file:
-            for x in y_pred:
-                if x == 0:
-                    file.write('neutral\n')
-                elif x == 1:
-                    file.write('positive\n')
-                else:
-                    file.write('negative\n')
-    
+        with open(f'{result_dir}/results_batch_{batch_size}_epoch_{epoch+1}.txt', 'w') as file:
+            mapper = {0: 'neutral', 1: 'positive', 2: 'negative'}
+            file.write("sentence\tground truth\tpredicted\n")
+            for i in range(len(X_test)):
+                file.write(f"{X_test[i]}\t{mapper[y_test[i]]}\t{mapper[y_pred[i]]}\n")
+        # Append epoch number and F1 score to test_f1 as a string
+        test_f1.append(f"Epoch {epoch + 1} : f1_score {f1_score(y_test, y_pred, average='weighted'):.4f}")
     return bertmodel, gptmodel, classifier
 
 bert, gpt, classifier = train(bertmodel, gptmodel, classifier, device=device, num_epochs=num_epochs)
 
-
-
-def calculate_weighted_f1(file_name, y_test):
-    """
-    Reads predictions from a file and computes the weighted F1 score.
-    :param file_name: Path to the file containing predictions.
-    :param y_test: List of true labels (integers).
-    :return: Weighted F1 score.
-    """
-    # Load predictions from file
-    y_pred = []
-    with open(file_name, 'r') as file:
-        for line in file:
-            line = line.strip()
-            if line == 'neutral':
-                y_pred.append(0)
-            elif line == 'positive':
-                y_pred.append(1)
-            elif line == 'negative':
-                y_pred.append(2)
-    
-    # Calculate weighted F1 score
-    return f1_score(y_test, y_pred, average='weighted')
-
-
-best_epoch_f1 = 0.0  # Initialize variable to store the best F1 score across epochs
-best_epoch = 0       # Initialize variable to store the epoch with the best F1 score
-
-for epoch in range(1, num_epochs):  # Loop through epoch_1 to epoch_num_epochs
-    file_name = f'results_batch_{batch_size}_epoch_{epoch}.txt'  # Update file name for each epoch
-    weighted_f1 = calculate_weighted_f1(file_name, y_test)  # Call the function
-    print(f"Epoch {epoch}: Weighted F1 Score: {weighted_f1:.4f}")
-    
-    # Update best F1 score and corresponding epoch if current F1 is better
-    if weighted_f1 > best_epoch_f1:
-        best_epoch_f1 = weighted_f1
-        best_epoch = epoch
-
-print(f"Best Weighted F1 Score: {best_epoch_f1:.4f} achieved at Epoch {best_epoch}")
-
-print(f"Training and evaluation completed.\n Results saved in {result_dir} directory.")
+# Save the test F1 scores to a file
+with open(f'{result_dir}/test_f1_score_{batch_size}_{num_epochs}.txt', 'w') as f:
+    for score in test_f1:
+        f.write(score + '\n')
+print(f"Test F1 scores saved to {result_dir}/test_f1_score_{batch_size}_{num_epochs}.txt")
