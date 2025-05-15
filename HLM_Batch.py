@@ -91,8 +91,8 @@ with open(os.path.join(data_dir, 'test.txt'),encoding='UTF-8') as rf:
 
 # Model and tokenizer setup
 # BERT
-berttokenizer = BertTokenizer.from_pretrained(encoder_model)
-bertmodel = BertModel.from_pretrained(encoder_model).to(device)
+berttokenizer = AutoTokenizer.from_pretrained(encoder_model)
+bertmodel = AutoModel.from_pretrained(encoder_model).to(device)
 
 # LLM with LoRA
 llm_model_name = decoder_model  # Use the provided decoder model name
