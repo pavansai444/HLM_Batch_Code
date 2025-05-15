@@ -17,7 +17,7 @@ for batch_size in "${batch_sizes[@]}"; do
                 result_dir="output/${encoder_name}__${decoder_name}"
                 mkdir -p "$result_dir"
                 echo "Running HLM_Batch.py with batch size: $batch_size, learning rate: $lr, encoder: $encoder_model, decoder: $decoder_model"
-                python3 HLM_Batch.py --batch_size "$batch_size" --learning_rate "$lr" --num_epochs 1 --max_length 256 --encoder_model "$encoder_model" --decoder_model "$decoder_model" --result_dir "$result_dir" --data_dir engtel/
+                python3 HLM_Batch.py --batch_size "$batch_size" --learning_rate "$lr" --num_epochs 3 --max_length 256 --encoder_model "$encoder_model" --decoder_model "$decoder_model" --result_dir "$result_dir" --data_dir engtel/
             done
         done
     done

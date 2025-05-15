@@ -321,17 +321,17 @@ def train(bertmodel, gptmodel, classifier, device=device, num_epochs=3):
         val_acc, val_f1 = predict(bertmodel, gptmodel, classifier, device, epoch)
         val_f1s.append(f"Epoch {epoch + 1} : Accuracy {val_acc:.4f} : F1 {val_f1:.4f}")
         # Save best model
-        if val_f1 > best_f1:
-            best_f1 = val_f1
-            print(f"New best F1 score: {best_f1:.4f} - Saving model")
-            torch.save({
-                'bert_state_dict': bertmodel.state_dict(),
-                'gpt_state_dict': gptmodel.state_dict(),
-                'classifier_state_dict': classifier.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'epoch': epoch,
-                'f1_score': val_f1
-            }, f'{result_dir}/best_model_epoch_{num_epochs}_batch_{batch_size}_lr_{lr:.0e}.pt')
+        # if val_f1 > best_f1:
+        #     best_f1 = val_f1
+        #     print(f"New best F1 score: {best_f1:.4f} - Saving model")
+        #     torch.save({
+        #         'bert_state_dict': bertmodel.state_dict(),
+        #         'gpt_state_dict': gptmodel.state_dict(),
+        #         'classifier_state_dict': classifier.state_dict(),
+        #         'optimizer_state_dict': optimizer.state_dict(),
+        #         'epoch': epoch,
+        #         'f1_score': val_f1
+        #     }, f'{result_dir}/best_model_epoch_{num_epochs}_batch_{batch_size}_lr_{lr:.0e}.pt')
         
         # Generate predictions for test set
         print("Generating test predictions...")
