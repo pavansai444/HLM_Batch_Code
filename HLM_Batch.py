@@ -70,24 +70,24 @@ with open(os.path.join(data_dir, 'train.txt'), encoding='UTF-8') as rf:
         X_train.append(da[0])
         lab = da[1].strip()
         y_train.append(0 if lab == "neutral" else 1 if lab == "positive" else 2)
-with open(os.path.join(data_dir, 'train.txt'), encoding='UTF-8') as rf:
+with open(os.path.join(data_dir, 'validation.txt'), encoding='UTF-8') as rf:
     for lin in rf.readlines():
         da = lin.split('\t')
         X_eval.append(da[0])
         lab = da[1].strip()
         y_eval.append(0 if lab == "neutral" else 1 if lab == "positive" else 2)
-with open(os.path.join(data_dir, 'train.txt'),encoding='UTF-8') as rf:
+with open(os.path.join(data_dir, 'test.txt'),encoding='UTF-8') as rf:
     lines = rf.readlines()
-for lin in lines:
-    da = lin.split('\t')
-    lab = da[1].strip()
-    X_test.append(da[0])
-    if lab == "neutral":
-        y_test.append(0)
-    if lab == "positive":
-        y_test.append(1)
-    if lab == "negative":
-        y_test.append(2)
+    for lin in lines:
+        da = lin.split('\t')
+        lab = da[1].strip()
+        X_test.append(da[0])
+        if lab == "neutral":
+            y_test.append(0)
+        if lab == "positive":
+            y_test.append(1)
+        if lab == "negative":
+            y_test.append(2)
 
 # Model and tokenizer setup
 # BERT
